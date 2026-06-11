@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Amazing Digital Circus Simulation</title>
-    
     <link rel="icon" type="image/png" href="tadc_logo.png">
 
     <style>
@@ -15,12 +14,13 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
             color: #fff;
+            height: 100vh;
         }
 
         #app-container {
             display: flex;
+            flex-direction: row;
             width: 100vw;
-            height: 100vw;
             height: 100vh;
         }
 
@@ -45,10 +45,10 @@
 
         #header-banner {
             background: #cc1122;
-            padding: 15px;
+            padding: 12px;
             text-align: center;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             border-bottom: 3px solid #dda612;
             color: #fff;
             text-shadow: 2px 2px #000;
@@ -67,15 +67,8 @@
             padding: 10px;
             border-radius: 6px;
             line-height: 1.4;
-            animation: fadeIn 0.3s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Character Message Themes */
         .caine { background: rgba(204, 17, 34, 0.25); border-left: 4px solid #cc1122; }
         .pomni { background: rgba(18, 100, 219, 0.25); border-left: 4px solid #1264db; }
         .jax { background: rgba(163, 102, 224, 0.25); border-left: 4px solid #a366e0; }
@@ -85,7 +78,7 @@
         .cowboy { background: rgba(100, 110, 120, 0.25); border-left: 4px solid #646e78; font-family: monospace; }
 
         #system-controls {
-            padding: 15px;
+            padding: 10px;
             background: #190d29;
             border-top: 2px solid #dda612;
             display: flex;
@@ -94,25 +87,25 @@
 
         .btn {
             flex: 1;
-            padding: 12px;
+            padding: 10px;
             font-weight: bold;
             cursor: pointer;
             border: none;
             border-radius: 4px;
             text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
         #start-btn { background: #00aa50; color: white; }
         #stop-btn { background: #cc1122; color: white; }
 
-        /* Pinned Broadcast System */
         #admin-panel {
-            padding: 15px;
+            padding: 12px;
             background: #0d0614;
             border-top: 3px dashed #dda612;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         #admin-row {
@@ -126,7 +119,6 @@
             color: white;
             border: 1px solid #dda612;
             border-radius: 4px;
-            cursor: pointer;
         }
 
         #admin-text-input {
@@ -136,41 +128,42 @@
             color: white;
             border: 1px solid #dda612;
             border-radius: 4px;
-            outline: none;
+            font-size: 16px;
         }
 
         #admin-send-btn {
-            padding: 8px 16px;
+            padding: 8px 14px;
             background: #dda612;
             color: #000;
             font-weight: bold;
             border: none;
             border-radius: 4px;
-            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            #app-container { flex-direction: column; }
+            #canvas-container { flex: 1.2; width: 100vw; }
+            #sidebar { width: 100vw; max-width: 100vw; border-left: none; border-top: 3px solid #dda612; }
+            #chat-box { padding: 8px; }
         }
     </style>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="app-container">
         <div id="canvas-container"></div>
-
         <div id="sidebar">
             <div id="header-banner">🎪 DIGITAL TENT STAGE 🎪</div>
-            
             <div id="chat-box">
                 <div class="message" style="background: rgba(255,255,255,0.05);">
                     System: Welcome! Press "Start Stage" to load up the troupe.
                 </div>
             </div>
-
             <div id="system-controls">
                 <button id="start-btn" class="btn" onclick="startCircusConversation()">Start Stage</button>
                 <button id="stop-btn" class="btn" onclick="stopCircusSimulation()">Halt Simulation</button>
             </div>
-
             <div id="admin-panel">
                 <div style="color: #dda612; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px;">
                     TROUPE BROADCAST DESK
@@ -184,8 +177,7 @@
                         <option value="Zooble">Zooble</option>
                         <option value="Gangle">Gangle</option>
                     </select>
-
-                    <input type="text" id="admin-text-input" placeholder="Say something or mention someone...">
+                    <input type="text" id="admin-text-input" placeholder="Say something...">
                     <button id="admin-send-btn">SEND</button>
                 </div>
             </div>
@@ -196,35 +188,29 @@
         function sendAdminBroadcast() {
             const charSelect = document.getElementById('admin-char-select');
             const textInput = document.getElementById('admin-text-input');
-            
             const character = charSelect.value;
             const text = textInput.value.trim();
-
             if (text === "") return;
 
-            // Send custom event to circus.js
             const broadcastEvent = new CustomEvent("forceCharacterSpeech", {
                 detail: { character: character, text: text }
             });
             window.dispatchEvent(broadcastEvent);
-
-            // Reset input and automatically refocus cursor back to input line
             textInput.value = "";
             textInput.focus();
         }
-
-        // Mouse click connection
         document.getElementById('admin-send-btn').addEventListener('click', sendAdminBroadcast);
-
-        // Enter Key press action handler
+        document.getElementById('admin-send-btn').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            sendAdminBroadcast();
+        });
         document.getElementById('admin-text-input').addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Block empty line breaks
+                event.preventDefault();
                 sendAdminBroadcast();
             }
         });
     </script>
-
     <script src="circus.js"></script>
 </body>
 </html>
